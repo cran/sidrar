@@ -12,7 +12,7 @@
 
 <meta name="author" content="Renato Prado Siqueira" />
 
-<meta name="date" content="2017-06-20" />
+<meta name="date" content="2017-06-28" />
 
 <title>Introduction to sidrar</title>
 
@@ -70,7 +70,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 <h1 class="title toc-ignore">Introduction to sidrar</h1>
 <h4 class="author"><em>Renato Prado Siqueira</em></h4>
-<h4 class="date"><em>2017-06-20</em></h4>
+<h4 class="date"><em>2017-06-28</em></h4>
 
 
 
@@ -116,32 +116,22 @@ search_sidra       It searches which tables have a particular
           <span class="dt">category =</span> <span class="kw">list</span>(<span class="dv">7169</span>),
           <span class="dt">header =</span> <span class="ot">FALSE</span>,
           <span class="dt">format =</span> <span class="dv">3</span>)</code></pre></div>
-<pre><code>#&gt;        D1C               D1N            D2N                    D3N
-#&gt; 1  5002704 Campo Grande - MS     junho 2016 IPCA - Variação mensal
-#&gt; 2  5002704 Campo Grande - MS     julho 2016 IPCA - Variação mensal
-#&gt; 3  5002704 Campo Grande - MS    agosto 2016 IPCA - Variação mensal
-#&gt; 4  5002704 Campo Grande - MS  setembro 2016 IPCA - Variação mensal
-#&gt; 5  5002704 Campo Grande - MS   outubro 2016 IPCA - Variação mensal
-#&gt; 6  5002704 Campo Grande - MS  novembro 2016 IPCA - Variação mensal
-#&gt; 7  5002704 Campo Grande - MS  dezembro 2016 IPCA - Variação mensal
-#&gt; 8  5002704 Campo Grande - MS   janeiro 2017 IPCA - Variação mensal
-#&gt; 9  5002704 Campo Grande - MS fevereiro 2017 IPCA - Variação mensal
+<pre><code>#&gt; # A tibble: 12 x 7
+#&gt;        D1C               D1N            D2N                    D3N
+#&gt;      &lt;chr&gt;             &lt;chr&gt;          &lt;chr&gt;                  &lt;chr&gt;
+#&gt;  1 5002704 Campo Grande - MS     junho 2016 IPCA - Variação mensal
+#&gt;  2 5002704 Campo Grande - MS     julho 2016 IPCA - Variação mensal
+#&gt;  3 5002704 Campo Grande - MS    agosto 2016 IPCA - Variação mensal
+#&gt;  4 5002704 Campo Grande - MS  setembro 2016 IPCA - Variação mensal
+#&gt;  5 5002704 Campo Grande - MS   outubro 2016 IPCA - Variação mensal
+#&gt;  6 5002704 Campo Grande - MS  novembro 2016 IPCA - Variação mensal
+#&gt;  7 5002704 Campo Grande - MS  dezembro 2016 IPCA - Variação mensal
+#&gt;  8 5002704 Campo Grande - MS   janeiro 2017 IPCA - Variação mensal
+#&gt;  9 5002704 Campo Grande - MS fevereiro 2017 IPCA - Variação mensal
 #&gt; 10 5002704 Campo Grande - MS     março 2017 IPCA - Variação mensal
 #&gt; 11 5002704 Campo Grande - MS     abril 2017 IPCA - Variação mensal
 #&gt; 12 5002704 Campo Grande - MS      maio 2017 IPCA - Variação mensal
-#&gt;             D4N         MN     V
-#&gt; 1  Índice geral Percentual  0.45
-#&gt; 2  Índice geral Percentual  0.74
-#&gt; 3  Índice geral Percentual  0.18
-#&gt; 4  Índice geral Percentual  0.48
-#&gt; 5  Índice geral Percentual  0.53
-#&gt; 6  Índice geral Percentual  0.43
-#&gt; 7  Índice geral Percentual  0.70
-#&gt; 8  Índice geral Percentual  0.56
-#&gt; 9  Índice geral Percentual  0.24
-#&gt; 10 Índice geral Percentual  0.14
-#&gt; 11 Índice geral Percentual -0.13
-#&gt; 12 Índice geral Percentual  0.42</code></pre>
+#&gt; # ... with 3 more variables: D4N &lt;chr&gt;, MN &lt;chr&gt;, V &lt;dbl&gt;</code></pre>
 <p>
 <br>
 </p>
@@ -155,60 +145,21 @@ search_sidra       It searches which tables have a particular
           <span class="dt">header =</span> <span class="ot">TRUE</span>,
           <span class="dt">format =</span> <span class="dv">1</span>)</code></pre></div>
 <pre><code>#&gt; Considering all categories once 'classific' was set to 'all' (default)
-#&gt;    Unidade da Federação (Código) Ano (Código) Variável (Código)
-#&gt; 2                             11         2014               529
-#&gt; 3                             12         2014               529
-#&gt; 4                             13         2014               529
-#&gt; 5                             14         2014               529
-#&gt; 6                             15         2014               529
-#&gt; 7                             16         2014               529
-#&gt; 8                             17         2014               529
-#&gt; 9                             21         2014               529
-#&gt; 10                            22         2014               529
-#&gt; 11                            23         2014               529
-#&gt; 12                            24         2014               529
-#&gt; 13                            25         2014               529
-#&gt; 14                            26         2014               529
-#&gt; 15                            27         2014               529
-#&gt; 16                            28         2014               529
-#&gt; 17                            29         2014               529
-#&gt; 18                            31         2014               529
-#&gt; 19                            32         2014               529
-#&gt; 20                            33         2014               529
-#&gt; 21                            35         2014               529
-#&gt; 22                            41         2014               529
-#&gt; 23                            42         2014               529
-#&gt; 24                            43         2014               529
-#&gt; 25                            50         2014               529
-#&gt; 26                            51         2014               529
-#&gt; 27                            52         2014               529
-#&gt;    Unidade de Medida (Código)    Valor
-#&gt; 2                          50 0.693248
-#&gt; 3                          50 0.711828
-#&gt; 4                          50 0.875365
-#&gt; 5                          50 0.745493
-#&gt; 6                          50 0.728157
-#&gt; 7                          50 0.772674
-#&gt; 8                          50 0.709116
-#&gt; 9                          50 0.723998
-#&gt; 10                         50 0.778504
-#&gt; 11                         50 0.793085
-#&gt; 12                         50 0.801311
-#&gt; 13                         50 0.789136
-#&gt; 14                         50 0.801410
-#&gt; 15                         50 0.746515
-#&gt; 16                         50 0.729067
-#&gt; 17                         50 0.778080
-#&gt; 18                         50 0.825603
-#&gt; 19                         50 0.768798
-#&gt; 20                         50 0.825369
-#&gt; 21                         50 0.875307
-#&gt; 22                         50 0.782095
-#&gt; 23                         50 0.762393
-#&gt; 24                         50 0.783686
-#&gt; 25                         50 0.692823
-#&gt; 26                         50 0.707413
-#&gt; 27                         50 0.794226</code></pre>
+#&gt; # A tibble: 26 x 5
+#&gt;    `Unidade da Federação (Código)` `Ano (Código)` `Variável (Código)`
+#&gt;                              &lt;chr&gt;          &lt;chr&gt;               &lt;chr&gt;
+#&gt;  1                              11           2014                 529
+#&gt;  2                              12           2014                 529
+#&gt;  3                              13           2014                 529
+#&gt;  4                              14           2014                 529
+#&gt;  5                              15           2014                 529
+#&gt;  6                              16           2014                 529
+#&gt;  7                              17           2014                 529
+#&gt;  8                              21           2014                 529
+#&gt;  9                              22           2014                 529
+#&gt; 10                              23           2014                 529
+#&gt; # ... with 16 more rows, and 2 more variables: `Unidade de Medida
+#&gt; #   (Código)` &lt;chr&gt;, Valor &lt;dbl&gt;</code></pre>
 <hr />
 </div>
 <div id="info_sidra" class="section level3">
