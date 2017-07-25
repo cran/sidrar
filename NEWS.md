@@ -1,3 +1,9 @@
+# sidrar 0.2.4
+
+* Fixed bug in search_sidra (Issue #2)
+* Better error messages
+* Vignette updated
+
 # sidrar 0.2.1
 
 * Fixed list-column in resultant data.frame in get_sidra (Issue #1)
