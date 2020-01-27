@@ -1,3 +1,8 @@
+# sidrar 0.2.5
+
+* Fixed bugs in get_sidra (Issue #5, #6 )
+* "tidyr" and "dplyr" package dependency removed
+
 # sidrar 0.2.4
 
 * Fixed bug in search_sidra (Issue #2)

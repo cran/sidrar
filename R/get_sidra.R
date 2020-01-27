@@ -241,8 +241,8 @@ get_sidra <- function(x,
       
     } else if (!is.null(classific)) {
       
-      if (is.null(category) || category == "all") {
-        
+      if (is.null(category) || (is.character(category) & category == "all")) {
+
         path_classific <- paste0("/", paste0(classific, "/all", collapse = "/"))
         
       } else if (!is.list(category)) {
@@ -255,10 +255,12 @@ get_sidra <- function(x,
         
       } else if (length(category) == length(classific)) {
         
+        path_classific <- ""
+        
         for (i in 1:length(category)) {
           
-          path_classific <- paste0("/", paste0(classific[i], "/", paste0(category[[i]], collapse = ",")))
-          
+          path_classific <- paste0(path_classific, "/", paste0(classific[i], "/", paste0(category[[i]], collapse = ",")))
+
         }
         
       } else if (length(category) < length(classific)) {
@@ -427,8 +429,8 @@ get_sidra <- function(x,
     path <- rjson::fromJSON(path)
     path <- as.data.frame(do.call("rbind", path))
     
-    path <- tidyr::unnest(path)
-    
+    path <- as.data.frame(lapply(path, unlist), stringsAsFactors = FALSE)
+
     if (path_header == "y"){
       
       colnames(path) <- unlist(path[1, ])

@@ -1,11 +1,6 @@
 ## ----setup, include=FALSE------------------------------------------------
 knitr::opts_chunk$set(echo = TRUE, collapse = TRUE, comment = "#>")
 
-## ----results='hide', echo=FALSE, message=FALSE, warning=FALSE------------
-library(magrittr)
-library(stringr)
-library(dplyr)
-
 ## ---- eval=FALSE---------------------------------------------------------
 #  install.packages("sidrar")
 
