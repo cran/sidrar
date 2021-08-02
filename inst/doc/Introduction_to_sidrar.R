@@ -1,15 +1,15 @@
-## ----setup, include=FALSE------------------------------------------------
+## ----setup, include=FALSE-----------------------------------------------------
 knitr::opts_chunk$set(echo = TRUE, collapse = TRUE, comment = "#>")
 
-## ---- eval=FALSE---------------------------------------------------------
+## ---- eval=FALSE--------------------------------------------------------------
 #  install.packages("sidrar")
 
-## ---- eval=FALSE---------------------------------------------------------
+## ---- eval=FALSE--------------------------------------------------------------
 #  library(devtools)
 #  install_github("rpradosiqueira/sidrar")
 
-## ---- eval=FALSE---------------------------------------------------------
-#  get_sidra          It recovers data from the geven table
+## ---- eval=FALSE--------------------------------------------------------------
+#  get_sidra          It recovers data from the given table
 #                     according to the parameters
 #  
 #  info_sidra         It allows you to check what parameters
@@ -18,7 +18,7 @@ knitr::opts_chunk$set(echo = TRUE, collapse = TRUE, comment = "#>")
 #  search_sidra       It searches which tables have a particular
 #                     word in their names
 
-## ---- eval = FALSE-------------------------------------------------------
+## ---- eval = FALSE------------------------------------------------------------
 #  library(sidrar)
 #  
 #  get_sidra(x = 1419,
@@ -32,7 +32,7 @@ knitr::opts_chunk$set(echo = TRUE, collapse = TRUE, comment = "#>")
 #            format = 3)
 #  
 
-## ---- echo = FALSE-------------------------------------------------------
+## ---- echo = FALSE------------------------------------------------------------
 ## Tabela obtida
 library(sidrar)
 
@@ -47,7 +47,7 @@ get_sidra(x = 1419,
           format = 3)
 
 
-## ---- eval = FALSE-------------------------------------------------------
+## ---- eval = FALSE------------------------------------------------------------
 #  get_sidra(x = 5939,
 #            variable = 529,
 #            period = "2014",
@@ -56,7 +56,7 @@ get_sidra(x = 1419,
 #            format = 1)
 #  
 
-## ---- echo = FALSE-------------------------------------------------------
+## ---- echo = FALSE------------------------------------------------------------
 get_sidra(x = 5939,
           variable = 529,
           period = "2014",
@@ -65,23 +65,23 @@ get_sidra(x = 5939,
           format = 1)
 
 
-## ---- eval = FALSE-------------------------------------------------------
-#  get_sidra(api = "/t/1378/n1/all/n2/all/v/all/p/all/c1/all/c2/0/c287/0/c455/all/d/v1000093%202")
+## ---- eval = FALSE------------------------------------------------------------
+#  get_sidra(api = "/t/5938/n3/all/v/37/p/last%201/d/v37%200")
 #  
 
-## ---- echo = FALSE-------------------------------------------------------
-get_sidra(api = "/t/1378/n1/all/n2/all/v/all/p/all/c1/all/c2/0/c287/0/c455/all/d/v1000093%202")
+## ---- echo = FALSE------------------------------------------------------------
+get_sidra(api = "/t/5938/n3/all/v/37/p/last%201/d/v37%200")
 
 
-## ---- echo = FALSE-------------------------------------------------------
+## ---- echo = FALSE------------------------------------------------------------
 info_sidra(5939)
 
-## ---- eval=FALSE---------------------------------------------------------
+## ---- eval=FALSE--------------------------------------------------------------
 #  info_sidra(5939, wb = TRUE)
 
-## ---- echo=FALSE, error=TRUE---------------------------------------------
+## ---- echo=FALSE, error=TRUE--------------------------------------------------
 cat("Can the web browser be open? (y/n): ")
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 search_sidra(c("gini"))
 

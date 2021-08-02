@@ -1,25 +1,25 @@
 Package: sidrar
 Type: Package
 Title: An Interface to IBGE's SIDRA API
-Version: 0.2.5
+Version: 0.2.6
 Authors@R: person("Renato", "Prado Siqueira", email = "rpradosiqueira@gmail.com", role = c("aut", "cre"))
 Description: Allows the user to connect with IBGE's (Instituto Brasileiro de 
-    Geografia e Estatistica, see <http://www.ibge.gov.br/> for more information)
+    Geografia e Estatistica, see <https://www.ibge.gov.br/> for more information)
     SIDRA API in a flexible way. SIDRA is the acronym to "Sistema IBGE de 
     Recuperacao Automatica" and is the system where IBGE turns available 
     aggregate data from their researches.
 Depends: R (>= 3.2.0)
 License: GPL-3
 Encoding: UTF-8
-URL: http://github.com/rpradosiqueira/sidrar
-BugReports: http://github.com/rpradosiqueira/sidrar/issues
+URL: https://github.com/rpradosiqueira/sidrar/
+BugReports: https://github.com/rpradosiqueira/sidrar/issues/
 Imports: magrittr, RCurl, rjson, rvest, stringr, xml2
 RoxygenNote: 6.0.1
-Suggests: knitr
+Suggests: knitr, rmarkdown
 VignetteBuilder: knitr
 NeedsCompilation: no
-Packaged: 2020-01-27 15:09:36 UTC; rprado
+Packaged: 2021-07-30 22:34:07 UTC; renat
 Author: Renato Prado Siqueira [aut, cre]
 Maintainer: Renato Prado Siqueira <rpradosiqueira@gmail.com>
 Repository: CRAN
-Date/Publication: 2020-01-27 15:30:05 UTC
+Date/Publication: 2021-08-02 15:40:05 UTC
