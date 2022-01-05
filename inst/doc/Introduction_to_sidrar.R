@@ -32,20 +32,20 @@ knitr::opts_chunk$set(echo = TRUE, collapse = TRUE, comment = "#>")
 #            format = 3)
 #  
 
-## ---- echo = FALSE------------------------------------------------------------
-## Tabela obtida
-library(sidrar)
-
-get_sidra(x = 1419,
-          variable = 63,
-          period = c(last = "12"),
-          geo = "City",
-          geo.filter = 5002704,
-          classific = "c315",
-          category = list(7169),
-          header = FALSE,
-          format = 3)
-
+## ---- echo = FALSE, eval=FALSE------------------------------------------------
+#  ## Tabela obtida
+#  library(sidrar)
+#  
+#  get_sidra(x = 1419,
+#            variable = 63,
+#            period = c(last = "12"),
+#            geo = "City",
+#            geo.filter = 5002704,
+#            classific = "c315",
+#            category = list(7169),
+#            header = FALSE,
+#            format = 3)
+#  
 
 ## ---- eval = FALSE------------------------------------------------------------
 #  get_sidra(x = 5939,
@@ -56,25 +56,25 @@ get_sidra(x = 1419,
 #            format = 1)
 #  
 
-## ---- echo = FALSE------------------------------------------------------------
-get_sidra(x = 5939,
-          variable = 529,
-          period = "2014",
-          geo = "State",
-          header = TRUE,
-          format = 1)
-
+## ---- echo = FALSE, eval=FALSE------------------------------------------------
+#  get_sidra(x = 5939,
+#            variable = 529,
+#            period = "2014",
+#            geo = "State",
+#            header = TRUE,
+#            format = 1)
+#  
 
 ## ---- eval = FALSE------------------------------------------------------------
 #  get_sidra(api = "/t/5938/n3/all/v/37/p/last%201/d/v37%200")
 #  
 
-## ---- echo = FALSE------------------------------------------------------------
-get_sidra(api = "/t/5938/n3/all/v/37/p/last%201/d/v37%200")
+## ---- echo = FALSE, eval=FALSE------------------------------------------------
+#  get_sidra(api = "/t/5938/n3/all/v/37/p/last%201/d/v37%200")
+#  
 
-
-## ---- echo = FALSE------------------------------------------------------------
-info_sidra(5939)
+## ---- echo = FALSE, eval=FALSE------------------------------------------------
+#  info_sidra(5939)
 
 ## ---- eval=FALSE--------------------------------------------------------------
 #  info_sidra(5939, wb = TRUE)
@@ -82,6 +82,6 @@ info_sidra(5939)
 ## ---- echo=FALSE, error=TRUE--------------------------------------------------
 cat("Can the web browser be open? (y/n): ")
 
-## -----------------------------------------------------------------------------
-search_sidra(c("gini"))
+## ---- eval=FALSE--------------------------------------------------------------
+#  search_sidra(c("gini"))
 
