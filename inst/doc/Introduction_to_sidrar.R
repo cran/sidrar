@@ -1,87 +1,79 @@
 ## ----setup, include=FALSE-----------------------------------------------------
 knitr::opts_chunk$set(echo = TRUE, collapse = TRUE, comment = "#>")
 
-## ---- eval=FALSE--------------------------------------------------------------
-#  install.packages("sidrar")
+## ----eval = FALSE-------------------------------------------------------------
+# install.packages("sidrar")
 
-## ---- eval=FALSE--------------------------------------------------------------
-#  library(devtools)
-#  install_github("rpradosiqueira/sidrar")
+## ----eval = FALSE-------------------------------------------------------------
+# # install.packages("pak")
+# pak::pak("rpradosiqueira/sidrar")
 
-## ---- eval=FALSE--------------------------------------------------------------
-#  get_sidra          It recovers data from the given table
-#                     according to the parameters
-#  
-#  info_sidra         It allows you to check what parameters
-#                     are available for a table via an web browser
-#  
-#  search_sidra       It searches which tables have a particular
-#                     word in their names
+## ----eval = FALSE-------------------------------------------------------------
+# library(sidrar)
+# 
+# search_sidra("IPCA")
+# search_sidra(c("contas", "nacionais"))
 
-## ---- eval = FALSE------------------------------------------------------------
-#  library(sidrar)
-#  
-#  get_sidra(x = 1419,
-#            variable = 63,
-#            period = c("last" = 12),
-#            geo = "City",
-#            geo.filter = 5002407,
-#            classific = "c315",
-#            category = list(7169),
-#            header = FALSE,
-#            format = 3)
-#  
+## ----eval = FALSE-------------------------------------------------------------
+# metadata <- info_sidra(7060)
+# names(metadata)
+# metadata$variable
+# metadata$classific_category
+# metadata$geo
 
-## ---- echo = FALSE, eval=FALSE------------------------------------------------
-#  ## Tabela obtida
-#  library(sidrar)
-#  
-#  get_sidra(x = 1419,
-#            variable = 63,
-#            period = c(last = "12"),
-#            geo = "City",
-#            geo.filter = 5002704,
-#            classific = "c315",
-#            category = list(7169),
-#            header = FALSE,
-#            format = 3)
-#  
+## ----eval = FALSE-------------------------------------------------------------
+# info_sidra(7060, wb = TRUE)
 
-## ---- eval = FALSE------------------------------------------------------------
-#  get_sidra(x = 5939,
-#            variable = 529,
-#            period = "2014",
-#            geo = "State",
-#            header = TRUE,
-#            format = 1)
-#  
+## ----eval = FALSE-------------------------------------------------------------
+# ipca <- get_sidra(
+#   x = 7060,
+#   variable = 63,
+#   period = c(last = 12),
+#   geo = "City",
+#   geo.filter = list(City = 5002704),
+#   classific = "c315",
+#   category = list(7169)
+# )
 
-## ---- echo = FALSE, eval=FALSE------------------------------------------------
-#  get_sidra(x = 5939,
-#            variable = 529,
-#            period = "2014",
-#            geo = "State",
-#            header = TRUE,
-#            format = 1)
-#  
+## ----eval = FALSE-------------------------------------------------------------
+# get_sidra(
+#   x = 7060,
+#   variable = 63,
+#   period = "last",
+#   geo = "City",
+#   geo.filter = list(State = 50),
+#   classific = "c315",
+#   category = list(7169)
+# )
 
-## ---- eval = FALSE------------------------------------------------------------
-#  get_sidra(api = "/t/5938/n3/all/v/37/p/last%201/d/v37%200")
-#  
+## ----eval = FALSE-------------------------------------------------------------
+# get_sidra(
+#   api = "/t/7060/n1/all/v/63/p/last/c315/7169"
+# )
 
-## ---- echo = FALSE, eval=FALSE------------------------------------------------
-#  get_sidra(api = "/t/5938/n3/all/v/37/p/last%201/d/v37%200")
-#  
+## ----eval = FALSE-------------------------------------------------------------
+# get_sidra(
+#   api = paste0(
+#     "https://apisidra.ibge.gov.br/values/",
+#     "t/7060/n1/all/v/63/p/last/c315/7169"
+#   )
+# )
 
-## ---- echo = FALSE, eval=FALSE------------------------------------------------
-#  info_sidra(5939)
+## ----eval = FALSE-------------------------------------------------------------
+# raw <- get_sidra(
+#   api = "/t/1849/n3/all/v/811/p/2018/c12762/all",
+#   value_type = "character"
+# )
 
-## ---- eval=FALSE--------------------------------------------------------------
-#  info_sidra(5939, wb = TRUE)
+## ----eval = FALSE-------------------------------------------------------------
+# both <- get_sidra(
+#   api = "/t/1849/n3/all/v/811/p/2018/c12762/all",
+#   value_type = "both"
+# )
 
-## ---- echo=FALSE, error=TRUE--------------------------------------------------
-cat("Can the web browser be open? (y/n): ")
-
-## ---- eval=FALSE--------------------------------------------------------------
-#  search_sidra(c("gini"))
+## ----eval = FALSE-------------------------------------------------------------
+# options(
+#   sidrar.timeout = 120,
+#   sidrar.retries = 4
+# )
 
