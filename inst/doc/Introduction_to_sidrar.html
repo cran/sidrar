@@ -354,7 +354,11 @@ statistics.</p>
 <li>find a table with <code>search_sidra()</code>;</li>
 <li>inspect its available dimensions with <code>info_sidra()</code>;
 and</li>
-<li>retrieve a selection with <code>get_sidra()</code>.</li>
+<li>optionally build and inspect a request with
+<code>sidra_query()</code> and <code>sidra_plan()</code>;</li>
+<li>retrieve a selection with <code>get_sidra()</code>; or</li>
+<li>split and collect a large explicit request with
+<code>sidra_split()</code> and <code>sidra_collect()</code>.</li>
 </ol>
 <p>Network-dependent examples are not evaluated while the vignette is
 built.</p>
@@ -392,51 +396,109 @@ table:</p>
 the default browser. The function no longer prompts for
 confirmation:</p>
 <div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="fu">info_sidra</span>(<span class="dv">7060</span>, <span class="at">wb =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
+<p>For programmatic work, use the normalized discovery layer. It
+preserves codes as character strings and returns stable base R data
+frames:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>catalog <span class="ot">&lt;-</span> <span class="fu">sidra_catalog</span>()</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>metadata <span class="ot">&lt;-</span> <span class="fu">sidra_metadata</span>(<span class="dv">7060</span>)</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>periods <span class="ot">&lt;-</span> <span class="fu">sidra_periods</span>(<span class="dv">7060</span>)</span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>locations <span class="ot">&lt;-</span> <span class="fu">sidra_locations</span>(<span class="dv">7060</span>, <span class="st">&quot;N1&quot;</span>)</span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a><span class="fu">names</span>(metadata)</span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a>metadata<span class="sc">$</span>variables</span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a>metadata<span class="sc">$</span>classifications</span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a>metadata<span class="sc">$</span>categories</span></code></pre></div>
+<p>The legacy <code>search_sidra()</code> and <code>info_sidra()</code>
+contracts remain unchanged.</p>
 </div>
 <div id="build-a-structured-request" class="section level2">
 <h2>Build a structured request</h2>
 <p>This request retrieves the monthly IPCA for the general index in
 Campo Grande, Mato Grosso do Sul, over the 12 most recent periods:</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>ipca <span class="ot">&lt;-</span> <span class="fu">get_sidra</span>(</span>
-<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>  <span class="at">x =</span> <span class="dv">7060</span>,</span>
-<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>  <span class="at">variable =</span> <span class="dv">63</span>,</span>
-<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>  <span class="at">period =</span> <span class="fu">c</span>(<span class="at">last =</span> <span class="dv">12</span>),</span>
-<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>  <span class="at">geo =</span> <span class="st">&quot;City&quot;</span>,</span>
-<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>  <span class="at">geo.filter =</span> <span class="fu">list</span>(<span class="at">City =</span> <span class="dv">5002704</span>),</span>
-<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a>  <span class="at">classific =</span> <span class="st">&quot;c315&quot;</span>,</span>
-<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a>  <span class="at">category =</span> <span class="fu">list</span>(<span class="dv">7169</span>)</span>
-<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a>)</span></code></pre></div>
-<p><code>geo.filter</code> may also select every unit inside a higher
-territorial level. For example, the following pattern requests cities
-inside Mato Grosso do Sul:</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="fu">get_sidra</span>(</span>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>ipca <span class="ot">&lt;-</span> <span class="fu">get_sidra</span>(</span>
 <span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>  <span class="at">x =</span> <span class="dv">7060</span>,</span>
 <span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>  <span class="at">variable =</span> <span class="dv">63</span>,</span>
-<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>  <span class="at">period =</span> <span class="st">&quot;last&quot;</span>,</span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>  <span class="at">period =</span> <span class="fu">c</span>(<span class="at">last =</span> <span class="dv">12</span>),</span>
 <span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>  <span class="at">geo =</span> <span class="st">&quot;City&quot;</span>,</span>
-<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>  <span class="at">geo.filter =</span> <span class="fu">list</span>(<span class="at">State =</span> <span class="dv">50</span>),</span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>  <span class="at">geo.filter =</span> <span class="fu">list</span>(<span class="at">City =</span> <span class="dv">5002704</span>),</span>
 <span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a>  <span class="at">classific =</span> <span class="st">&quot;c315&quot;</span>,</span>
 <span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a>  <span class="at">category =</span> <span class="fu">list</span>(<span class="dv">7169</span>)</span>
 <span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a>)</span></code></pre></div>
+<p><code>geo.filter</code> may also select every unit inside a higher
+territorial level. For example, the following pattern requests cities
+inside Mato Grosso do Sul:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="fu">get_sidra</span>(</span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>  <span class="at">x =</span> <span class="dv">7060</span>,</span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>  <span class="at">variable =</span> <span class="dv">63</span>,</span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a>  <span class="at">period =</span> <span class="st">&quot;last&quot;</span>,</span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a>  <span class="at">geo =</span> <span class="st">&quot;City&quot;</span>,</span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a>  <span class="at">geo.filter =</span> <span class="fu">list</span>(<span class="at">State =</span> <span class="dv">50</span>),</span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a>  <span class="at">classific =</span> <span class="st">&quot;c315&quot;</span>,</span>
+<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a>  <span class="at">category =</span> <span class="fu">list</span>(<span class="dv">7169</span>)</span>
+<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a>)</span></code></pre></div>
 <p>The existing defaults remain unchanged: descriptive headers are
 enabled, <code>format = 4</code> requests codes and names,
 <code>digits = &quot;default&quot;</code> uses the table’s standard precision, and
 <code>variable = &quot;allxp&quot;</code> excludes automatically generated
 percentage variables.</p>
+<p>Build the same request without downloading values and inspect the
+selections whose cardinality can be determined offline:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a>query <span class="ot">&lt;-</span> <span class="fu">sidra_query</span>(</span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a>  <span class="at">x =</span> <span class="dv">7060</span>,</span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a>  <span class="at">variable =</span> <span class="dv">63</span>,</span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a>  <span class="at">period =</span> <span class="fu">sprintf</span>(<span class="st">&quot;2024%02d&quot;</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">12</span>),</span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a>  <span class="at">geo =</span> <span class="st">&quot;City&quot;</span>,</span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a>  <span class="at">geo.filter =</span> <span class="fu">list</span>(<span class="at">City =</span> <span class="dv">5002704</span>),</span>
+<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a>  <span class="at">classific =</span> <span class="st">&quot;c315&quot;</span>,</span>
+<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a>  <span class="at">category =</span> <span class="fu">list</span>(<span class="dv">7169</span>)</span>
+<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a>)</span>
+<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a></span>
+<span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a>query<span class="sc">$</span>url</span>
+<span id="cb9-12"><a href="#cb9-12" tabindex="-1"></a><span class="fu">sidra_plan</span>(query)</span></code></pre></div>
+<p>No service limit is assumed by the planner. If a limit is known for
+the current request, pass it explicitly with
+<code>sidra_plan(query, limit = ...)</code>.</p>
+</div>
+<div id="split-and-collect-explicit-batches" class="section level2">
+<h2>Split and collect explicit batches</h2>
+<p>When one dimension contains many explicit members, split it into
+disjoint batches and collect them sequentially:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a>batches <span class="ot">&lt;-</span> <span class="fu">sidra_split</span>(query, <span class="at">by =</span> <span class="st">&quot;period&quot;</span>, <span class="at">size =</span> <span class="dv">6</span>)</span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a>data <span class="ot">&lt;-</span> <span class="fu">sidra_collect</span>(batches, <span class="at">provenance =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a><span class="fu">sidra_provenance</span>(data)</span></code></pre></div>
+<p><code>sidra_collect()</code> requires identical names and column
+types across batches. It does not sort or deduplicate rows. Category
+members containing a space are SIDRA sums and are kept indivisible.
+Queries supplied only through <code>api =</code> cannot be split because
+their original argument structure is unavailable. Relative periods,
+period ranges, and embedded comma lists must first be expanded to one
+explicit member per vector element. A geographic filter can be split
+only for a query with one non-Brazil territorial level; multiple levels
+would repeat the unchanged levels in every batch.</p>
+<p>Territorial views (<code>G</code>) and extinct territorial units
+(<code>/u/y</code>) are available through additive arguments:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="fu">sidra_query</span>(<span class="dv">1612</span>, <span class="at">geo_view =</span> <span class="dv">44</span>, <span class="at">classific =</span> <span class="fu">character</span>())</span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a><span class="fu">sidra_query</span>(</span>
+<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a>  <span class="dv">1612</span>,</span>
+<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a>  <span class="at">geo =</span> <span class="st">&quot;State&quot;</span>,</span>
+<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a>  <span class="at">geo.filter =</span> <span class="fu">list</span>(<span class="fu">c</span>(<span class="dv">20</span>, <span class="dv">34</span>)),</span>
+<span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a>  <span class="at">include_extinct =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb11-7"><a href="#cb11-7" tabindex="-1"></a>  <span class="at">classific =</span> <span class="fu">character</span>()</span>
+<span id="cb11-8"><a href="#cb11-8" tabindex="-1"></a>)</span></code></pre></div>
 </div>
 <div id="use-an-api-path-or-full-url" class="section level2">
 <h2>Use an API path or full URL</h2>
 <p>If a query was assembled elsewhere, pass either its path:</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="fu">get_sidra</span>(</span>
-<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>  <span class="at">api =</span> <span class="st">&quot;/t/7060/n1/all/v/63/p/last/c315/7169&quot;</span></span>
-<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>)</span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a><span class="fu">get_sidra</span>(</span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a>  <span class="at">api =</span> <span class="st">&quot;/t/7060/n1/all/v/63/p/last/c315/7169&quot;</span></span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a>)</span></code></pre></div>
 <p>or the complete official HTTPS URL:</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="fu">get_sidra</span>(</span>
-<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a>  <span class="at">api =</span> <span class="fu">paste0</span>(</span>
-<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a>    <span class="st">&quot;https://apisidra.ibge.gov.br/values/&quot;</span>,</span>
-<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a>    <span class="st">&quot;t/7060/n1/all/v/63/p/last/c315/7169&quot;</span></span>
-<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a>  )</span>
-<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a>)</span></code></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a><span class="fu">get_sidra</span>(</span>
+<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a>  <span class="at">api =</span> <span class="fu">paste0</span>(</span>
+<span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a>    <span class="st">&quot;https://apisidra.ibge.gov.br/values/&quot;</span>,</span>
+<span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a>    <span class="st">&quot;t/7060/n1/all/v/63/p/last/c315/7169&quot;</span></span>
+<span id="cb13-5"><a href="#cb13-5" tabindex="-1"></a>  )</span>
+<span id="cb13-6"><a href="#cb13-6" tabindex="-1"></a>)</span></code></pre></div>
 <p>Full URLs are restricted to the official
 <code>https://apisidra.ibge.gov.br/values</code> endpoint.
 Percent-encoded segments such as <code>%20</code> are preserved. If the
@@ -453,26 +515,33 @@ when it is unavailable. Earlier versions returned a numeric
 That remains the default for compatibility.</p>
 <p>Use <code>value_type = &quot;character&quot;</code> to keep the symbols
 directly:</p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a>raw <span class="ot">&lt;-</span> <span class="fu">get_sidra</span>(</span>
-<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a>  <span class="at">api =</span> <span class="st">&quot;/t/1849/n3/all/v/811/p/2018/c12762/all&quot;</span>,</span>
-<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a>  <span class="at">value_type =</span> <span class="st">&quot;character&quot;</span></span>
-<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a>)</span></code></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a>raw <span class="ot">&lt;-</span> <span class="fu">get_sidra</span>(</span>
+<span id="cb14-2"><a href="#cb14-2" tabindex="-1"></a>  <span class="at">api =</span> <span class="st">&quot;/t/1849/n3/all/v/811/p/2018/c12762/all&quot;</span>,</span>
+<span id="cb14-3"><a href="#cb14-3" tabindex="-1"></a>  <span class="at">value_type =</span> <span class="st">&quot;character&quot;</span></span>
+<span id="cb14-4"><a href="#cb14-4" tabindex="-1"></a>)</span></code></pre></div>
 <p>Use <code>value_type = &quot;both&quot;</code> to keep numeric
 <code>Valor</code> and append <code>Valor_raw</code>:</p>
-<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a>both <span class="ot">&lt;-</span> <span class="fu">get_sidra</span>(</span>
-<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a>  <span class="at">api =</span> <span class="st">&quot;/t/1849/n3/all/v/811/p/2018/c12762/all&quot;</span>,</span>
-<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a>  <span class="at">value_type =</span> <span class="st">&quot;both&quot;</span></span>
-<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a>)</span></code></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a>both <span class="ot">&lt;-</span> <span class="fu">get_sidra</span>(</span>
+<span id="cb15-2"><a href="#cb15-2" tabindex="-1"></a>  <span class="at">api =</span> <span class="st">&quot;/t/1849/n3/all/v/811/p/2018/c12762/all&quot;</span>,</span>
+<span id="cb15-3"><a href="#cb15-3" tabindex="-1"></a>  <span class="at">value_type =</span> <span class="st">&quot;both&quot;</span></span>
+<span id="cb15-4"><a href="#cb15-4" tabindex="-1"></a>)</span></code></pre></div>
 </div>
 <div id="network-behavior" class="section level2">
 <h2>Network behavior</h2>
 <p>Requests use HTTPS, UTF-8 decoding, an identifying user agent, a
 timeout, and limited retries for transient failures. Customize the
 timeout and retry count with:</p>
-<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a><span class="fu">options</span>(</span>
-<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a>  <span class="at">sidrar.timeout =</span> <span class="dv">120</span>,</span>
-<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a>  <span class="at">sidrar.retries =</span> <span class="dv">4</span></span>
-<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a>)</span></code></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" tabindex="-1"></a><span class="fu">options</span>(</span>
+<span id="cb16-2"><a href="#cb16-2" tabindex="-1"></a>  <span class="at">sidrar.timeout =</span> <span class="dv">120</span>,</span>
+<span id="cb16-3"><a href="#cb16-3" tabindex="-1"></a>  <span class="at">sidrar.retries =</span> <span class="dv">4</span></span>
+<span id="cb16-4"><a href="#cb16-4" tabindex="-1"></a>)</span></code></pre></div>
+<p>Catalog and metadata caching is explicit and disabled by default.
+Value responses are never cached:</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" tabindex="-1"></a>metadata <span class="ot">&lt;-</span> <span class="fu">sidra_metadata</span>(<span class="dv">7060</span>, <span class="at">cache =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb17-2"><a href="#cb17-2" tabindex="-1"></a><span class="fu">sidra_cache_info</span>()</span>
+<span id="cb17-3"><a href="#cb17-3" tabindex="-1"></a><span class="fu">sidra_cache_clear</span>()</span></code></pre></div>
+<p>Use <code>refresh = TRUE</code> to bypass and replace a cached
+discovery entry.</p>
 <p>Invalid parameters and API limits are reported with the response
 returned by SIDRA. See the <a href="https://apisidra.ibge.gov.br/home/ajuda">official API help</a> for
 the complete query syntax and current service limits.</p>
