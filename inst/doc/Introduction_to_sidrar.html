@@ -542,6 +542,23 @@ Value responses are never cached:</p>
 <span id="cb17-3"><a href="#cb17-3" tabindex="-1"></a><span class="fu">sidra_cache_clear</span>()</span></code></pre></div>
 <p>Use <code>refresh = TRUE</code> to bypass and replace a cached
 discovery entry.</p>
+<p>Cloudflare browser challenges are identified as
+<code>sidrar_challenge_error</code>. For compatible values queries,
+<code>get_sidra()</code> and <code>sidra_collect()</code> can use IBGE’s
+official aggregate API v3 as an alternative endpoint. This fallback
+supports one geographic level, explicit or latest periods, standard
+variable/category selections, and the default format and precision. It
+preserves the requested headers and special-value handling, and
+announces when the alternative is used. Set
+<code>options(sidrar.fallback = FALSE)</code> to disable it. Unsupported
+selections retain the original challenge error with an explanation in
+<code>fallback_reason</code>.</p>
+<p>Collection provenance records actual source endpoints in
+<code>urls</code> and the original queries in
+<code>requested_urls</code> when fallback occurs. If both official
+endpoints fail, report the URL, time, and the error’s
+<code>cf_ray</code> to IBGE; increasing retries cannot solve an
+interactive browser challenge.</p>
 <p>Invalid parameters and API limits are reported with the response
 returned by SIDRA. See the <a href="https://apisidra.ibge.gov.br/home/ajuda">official API help</a> for
 the complete query syntax and current service limits.</p>
