@@ -1,3 +1,47 @@
+# sidrar 0.6.0
+
+* Split relative or complete SIDRA values URLs with `sidra_split()`, preserving
+  parameter order. Period selections `all`, `first`, `last`, and ranges can be
+  frozen to the official period inventory before downloading values.
+* Added opt-in period batching with `sidra_collect(batch_size = ...)` and
+  resumable local checkpoints with `checkpoint = ...`. Completed batches have
+  checksums and original access times; mismatched settings, schema drift,
+  corrupted files, and concurrent writers fail explicitly. No implicit disk
+  cache or change to `get_sidra()` is introduced.
+* `info_sidra()` can use official aggregate metadata and periods when the
+  original descriptor returns a browser challenge. Its five legacy components
+  are preserved; fields unavailable from the alternative source are disclosed
+  instead of fabricated. Both-source failures retain the original error.
+* Expanded offline compatibility tests across monthly, quarterly, annual, and
+  multiple-classification synthetic fixtures, including special symbols,
+  UTF-8, leading-zero identifiers, and comparison by keys rather than row order.
+
+* Validate the complete alternative-response schema on every fallback path,
+  including canonical queries at default precision. Reject out-of-selection
+  codes and duplicate observation keys without altering identifiers or values.
+  Missing explicitly requested members emit `sidrar_incomplete_warning`;
+  sparse tables are not forced into a complete Cartesian product.
+* Honor `Retry-After` on HTTP 429 and 503 independently of quiet logging,
+  including HTTP dates, while preserving the configured total attempt budget.
+  The maximum accepted server-requested delay is configurable through
+  `options(sidrar.retry_after_max = 120)`, with a default of 60 seconds.
+  Longer delays return an informative error with `retry_after_max` instead of
+  retrying prematurely or waiting indefinitely.
+* Broadened the official aggregate API fallback to multiple territorial levels,
+  complete and first-period selections, period ranges, and SIDRA URLs with
+  dimensions in different orders. Dimension columns follow the original URL;
+  observation order remains that returned by the alternative service.
+* Explicit decimal precision, including a single variable-specific `/d/vID N`
+  selection, is accepted when numeric values already have the requested number
+  of decimal places. Incompatible precision raises
+  `sidrar_fallback_precision_error` rather than silently rounding values or
+  inventing unavailable digits. Maximum precision remains unsupported by the
+  alternative route.
+* Automatic classification discovery can use official aggregate metadata when
+  SIDRA's table descriptor returns a Cloudflare challenge.
+* Recognized additional Cloudflare challenge pages containing a challenge title
+  and the official challenge host, without requiring legacy HTML markers.
+
 # sidrar 0.5.1
 
 * Recognized Cloudflare browser challenges as `sidrar_challenge_error`,

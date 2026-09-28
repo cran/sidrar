@@ -28,6 +28,29 @@ test_that("the reported census query works through the supported endpoints", {
   expect_type(result$Valor, "double")
 })
 
+test_that("PNAD queries retain multiple levels, first periods and precision", {
+  skip_on_cran()
+  skip_if_not(run_live_tests(), "Set SIDRAR_RUN_LIVE_TESTS=true")
+  live_api_pause()
+
+  result <- suppressMessages(get_sidra(
+    api = paste0(
+      "/t/6468/n1/all/n2/all/n3/all/v/4099/p/first%202/",
+      "d/v4099%201/h/n"
+    ),
+    value_type = "both"
+  ))
+  expect_identical(nrow(result), 66L)
+  expect_setequal(result$NC, c("1", "2", "3"))
+  expect_identical(unique(result$D2C), "4099")
+  expect_identical(length(unique(result$D3C)), 2L)
+  expect_true(all(grepl("^[0-9]+$", result$D1C)))
+  expect_true(all(
+    grepl("^-?[0-9]+[.][0-9]$", result$V_raw) |
+      result$V_raw %in% c("-", "..", "...", "X")
+  ))
+})
+
 test_that("the live SIDRA values endpoint returns a current observation", {
   skip_on_cran()
   skip_if_not(run_live_tests(), "Set SIDRAR_RUN_LIVE_TESTS=true")
@@ -133,7 +156,8 @@ test_that("the live discovery endpoints respond", {
     names(info),
     c("table", "period", "variable", "classific_category", "geo")
   )
-  expect_match(info$period, " a ", fixed = TRUE)
+  expect_true(is.character(info$period) && length(info$period) == 1L &&
+                nzchar(info$period))
   expect_type(info$classific_category, "list")
   expect_match(names(info$classific_category)[[1L]], "^c[0-9]+ ")
   expect_gt(length(matches), 0L)
@@ -160,6 +184,27 @@ test_that("the live discovery endpoints respond", {
   )))
   expect_true(all(c("location_id", "location_name") %in% names(locations)))
   expect_gt(nrow(locations), 0L)
+})
+
+test_that("live URL batches resume and agree by key with a small whole query", {
+  skip_on_cran()
+  skip_if_not(run_live_tests(), "Set SIDRAR_RUN_LIVE_TESTS=true")
+  live_api_pause()
+  directory <- tempfile()
+  on.exit(unlink(directory, recursive = TRUE), add = TRUE)
+  url <- "/t/6468/n1/1/v/4099/p/first%202/h/n"
+  batches <- sidra_split(url, "period", size = 1)
+  data <- sidra_collect(batches, checkpoint = directory, provenance = TRUE,
+                        value_type = "both")
+  again <- sidra_collect(batches, checkpoint = directory, provenance = TRUE,
+                         value_type = "both")
+  expect_true(all(sidra_provenance(again)$resumed))
+  expect_identical(data$V_raw, again$V_raw)
+  expect_identical(nrow(data), 2L)
+  live_api_pause()
+  whole <- suppressMessages(get_sidra(api = url, value_type = "both"))
+  expect_identical(data$V_raw[order(data$D3C)], whole$V_raw[order(whole$D3C)])
+  expect_identical(data$D3C[order(data$D3C)], whole$D3C[order(whole$D3C)])
 })
 
 test_that("live territorial views and extinct units respond", {

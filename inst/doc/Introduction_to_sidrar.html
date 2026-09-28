@@ -409,7 +409,14 @@ frames:</p>
 <span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a>metadata<span class="sc">$</span>classifications</span>
 <span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a>metadata<span class="sc">$</span>categories</span></code></pre></div>
 <p>The legacy <code>search_sidra()</code> and <code>info_sidra()</code>
-contracts remain unchanged.</p>
+contracts remain unchanged. If SIDRA’s descriptor returns a recognized
+browser challenge, <code>info_sidra()</code> uses official aggregate
+metadata and periods. It discloses unavailable descriptor-specific
+names, geographic counts, and variable availability exceptions in
+<code>attr(metadata, &quot;sidrar_metadata&quot;)</code> when
+<code>metadata</code> is its return value; it does not invent equivalent
+fields. <code>wb = TRUE</code> still opens the original descriptor.
+<code>options(sidrar.fallback = FALSE)</code> disables this route.</p>
 </div>
 <div id="build-a-structured-request" class="section level2">
 <h2>Build a structured request</h2>
@@ -459,8 +466,8 @@ selections whose cardinality can be determined offline:</p>
 the current request, pass it explicitly with
 <code>sidra_plan(query, limit = ...)</code>.</p>
 </div>
-<div id="split-and-collect-explicit-batches" class="section level2">
-<h2>Split and collect explicit batches</h2>
+<div id="split-and-collect-batches" class="section level2">
+<h2>Split and collect batches</h2>
 <p>When one dimension contains many explicit members, split it into
 disjoint batches and collect them sequentially:</p>
 <div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a>batches <span class="ot">&lt;-</span> <span class="fu">sidra_split</span>(query, <span class="at">by =</span> <span class="st">&quot;period&quot;</span>, <span class="at">size =</span> <span class="dv">6</span>)</span>
@@ -468,37 +475,68 @@ disjoint batches and collect them sequentially:</p>
 <span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a><span class="fu">sidra_provenance</span>(data)</span></code></pre></div>
 <p><code>sidra_collect()</code> requires identical names and column
 types across batches. It does not sort or deduplicate rows. Category
-members containing a space are SIDRA sums and are kept indivisible.
-Queries supplied only through <code>api =</code> cannot be split because
-their original argument structure is unavailable. Relative periods,
-period ranges, and embedded comma lists must first be expanded to one
-explicit member per vector element. A geographic filter can be split
-only for a query with one non-Brazil territorial level; multiple levels
-would repeat the unchanged levels in every batch.</p>
+members containing a space are SIDRA sums and are kept indivisible in
+structured queries. URLs can now be split directly; period selectors
+<code>all</code>, <code>first</code>, <code>last</code>, and ranges use
+the official inventory without inventing calendar periods. Other special
+selectors require explicit codes. A geographic filter can be split only
+for a query with one non-Brazil territorial level; multiple levels would
+repeat the unchanged levels in every batch.</p>
+<p>Version 0.6.0 adds opt-in period batching and resumable local
+checkpoints:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a>url <span class="ot">&lt;-</span> <span class="st">&quot;/t/6468/n1/all/n2/all/n3/all/v/4099/p/all/h/n&quot;</span></span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a>batches <span class="ot">&lt;-</span> <span class="fu">sidra_split</span>(url, <span class="st">&quot;period&quot;</span>, <span class="at">size =</span> <span class="dv">8</span>)</span>
+<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a>batches<span class="sc">$</span>resolution<span class="sc">$</span>selection</span>
+<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a></span>
+<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a>data <span class="ot">&lt;-</span> <span class="fu">sidra_collect</span>(</span>
+<span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a>  url, <span class="at">batch_size =</span> <span class="dv">8</span>, <span class="at">value_type =</span> <span class="st">&quot;both&quot;</span>,</span>
+<span id="cb11-7"><a href="#cb11-7" tabindex="-1"></a>  <span class="at">checkpoint =</span> <span class="st">&quot;sidrar-pnad&quot;</span>, <span class="at">provenance =</span> <span class="cn">TRUE</span></span>
+<span id="cb11-8"><a href="#cb11-8" tabindex="-1"></a>)</span>
+<span id="cb11-9"><a href="#cb11-9" tabindex="-1"></a><span class="co"># Repeat the same call after an interruption to reuse completed batches.</span></span>
+<span id="cb11-10"><a href="#cb11-10" tabindex="-1"></a><span class="fu">sidra_provenance</span>(data)<span class="sc">$</span>batch_accessed_at</span>
+<span id="cb11-11"><a href="#cb11-11" tabindex="-1"></a><span class="fu">sidra_provenance</span>(data)<span class="sc">$</span>resumed</span></code></pre></div>
+<p><code>batch_size</code> limits periods, not cells: one period can
+still exceed the API limit and require splitting another explicit
+dimension. <code>get_sidra()</code> remains unchanged and does not split
+or store values. Checkpoints freeze the period inventory, including
+relative selectors when <code>batch_size</code> is omitted, and validate
+settings, package version, checksums, and schemas before reuse. They are
+trusted local files, separate from the metadata cache. An existing
+checkpoint is never silently cleared; use a new directory for a fresh
+extract. Stored and new batches may span source revisions, so inspect
+access times. The result is still combined in memory, not queried from
+disk. A stale <code>.sidrar-lock</code> after a hard crash must only be
+removed after confirming there is no running collector. URL geographic
+splitting requires direct codes; use a structured query for containment
+filters.</p>
+<p>For comparisons between services or collections, align by
+territorial-level, location, period, variable, and classification codes,
+not row positions. Names can change and two territorial levels can reuse
+a location code.</p>
 <p>Territorial views (<code>G</code>) and extinct territorial units
 (<code>/u/y</code>) are available through additive arguments:</p>
-<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="fu">sidra_query</span>(<span class="dv">1612</span>, <span class="at">geo_view =</span> <span class="dv">44</span>, <span class="at">classific =</span> <span class="fu">character</span>())</span>
-<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a><span class="fu">sidra_query</span>(</span>
-<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a>  <span class="dv">1612</span>,</span>
-<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a>  <span class="at">geo =</span> <span class="st">&quot;State&quot;</span>,</span>
-<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a>  <span class="at">geo.filter =</span> <span class="fu">list</span>(<span class="fu">c</span>(<span class="dv">20</span>, <span class="dv">34</span>)),</span>
-<span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a>  <span class="at">include_extinct =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb11-7"><a href="#cb11-7" tabindex="-1"></a>  <span class="at">classific =</span> <span class="fu">character</span>()</span>
-<span id="cb11-8"><a href="#cb11-8" tabindex="-1"></a>)</span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a><span class="fu">sidra_query</span>(<span class="dv">1612</span>, <span class="at">geo_view =</span> <span class="dv">44</span>, <span class="at">classific =</span> <span class="fu">character</span>())</span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a><span class="fu">sidra_query</span>(</span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a>  <span class="dv">1612</span>,</span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a>  <span class="at">geo =</span> <span class="st">&quot;State&quot;</span>,</span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a>  <span class="at">geo.filter =</span> <span class="fu">list</span>(<span class="fu">c</span>(<span class="dv">20</span>, <span class="dv">34</span>)),</span>
+<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a>  <span class="at">include_extinct =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a>  <span class="at">classific =</span> <span class="fu">character</span>()</span>
+<span id="cb12-8"><a href="#cb12-8" tabindex="-1"></a>)</span></code></pre></div>
 </div>
 <div id="use-an-api-path-or-full-url" class="section level2">
 <h2>Use an API path or full URL</h2>
 <p>If a query was assembled elsewhere, pass either its path:</p>
-<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a><span class="fu">get_sidra</span>(</span>
-<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a>  <span class="at">api =</span> <span class="st">&quot;/t/7060/n1/all/v/63/p/last/c315/7169&quot;</span></span>
-<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a>)</span></code></pre></div>
-<p>or the complete official HTTPS URL:</p>
 <div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a><span class="fu">get_sidra</span>(</span>
-<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a>  <span class="at">api =</span> <span class="fu">paste0</span>(</span>
-<span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a>    <span class="st">&quot;https://apisidra.ibge.gov.br/values/&quot;</span>,</span>
-<span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a>    <span class="st">&quot;t/7060/n1/all/v/63/p/last/c315/7169&quot;</span></span>
-<span id="cb13-5"><a href="#cb13-5" tabindex="-1"></a>  )</span>
-<span id="cb13-6"><a href="#cb13-6" tabindex="-1"></a>)</span></code></pre></div>
+<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a>  <span class="at">api =</span> <span class="st">&quot;/t/7060/n1/all/v/63/p/last/c315/7169&quot;</span></span>
+<span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a>)</span></code></pre></div>
+<p>or the complete official HTTPS URL:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a><span class="fu">get_sidra</span>(</span>
+<span id="cb14-2"><a href="#cb14-2" tabindex="-1"></a>  <span class="at">api =</span> <span class="fu">paste0</span>(</span>
+<span id="cb14-3"><a href="#cb14-3" tabindex="-1"></a>    <span class="st">&quot;https://apisidra.ibge.gov.br/values/&quot;</span>,</span>
+<span id="cb14-4"><a href="#cb14-4" tabindex="-1"></a>    <span class="st">&quot;t/7060/n1/all/v/63/p/last/c315/7169&quot;</span></span>
+<span id="cb14-5"><a href="#cb14-5" tabindex="-1"></a>  )</span>
+<span id="cb14-6"><a href="#cb14-6" tabindex="-1"></a>)</span></code></pre></div>
 <p>Full URLs are restricted to the official
 <code>https://apisidra.ibge.gov.br/values</code> endpoint.
 Percent-encoded segments such as <code>%20</code> are preserved. If the
@@ -515,44 +553,78 @@ when it is unavailable. Earlier versions returned a numeric
 That remains the default for compatibility.</p>
 <p>Use <code>value_type = &quot;character&quot;</code> to keep the symbols
 directly:</p>
-<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a>raw <span class="ot">&lt;-</span> <span class="fu">get_sidra</span>(</span>
-<span id="cb14-2"><a href="#cb14-2" tabindex="-1"></a>  <span class="at">api =</span> <span class="st">&quot;/t/1849/n3/all/v/811/p/2018/c12762/all&quot;</span>,</span>
-<span id="cb14-3"><a href="#cb14-3" tabindex="-1"></a>  <span class="at">value_type =</span> <span class="st">&quot;character&quot;</span></span>
-<span id="cb14-4"><a href="#cb14-4" tabindex="-1"></a>)</span></code></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a>raw <span class="ot">&lt;-</span> <span class="fu">get_sidra</span>(</span>
+<span id="cb15-2"><a href="#cb15-2" tabindex="-1"></a>  <span class="at">api =</span> <span class="st">&quot;/t/1849/n3/all/v/811/p/2018/c12762/all&quot;</span>,</span>
+<span id="cb15-3"><a href="#cb15-3" tabindex="-1"></a>  <span class="at">value_type =</span> <span class="st">&quot;character&quot;</span></span>
+<span id="cb15-4"><a href="#cb15-4" tabindex="-1"></a>)</span></code></pre></div>
 <p>Use <code>value_type = &quot;both&quot;</code> to keep numeric
 <code>Valor</code> and append <code>Valor_raw</code>:</p>
-<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a>both <span class="ot">&lt;-</span> <span class="fu">get_sidra</span>(</span>
-<span id="cb15-2"><a href="#cb15-2" tabindex="-1"></a>  <span class="at">api =</span> <span class="st">&quot;/t/1849/n3/all/v/811/p/2018/c12762/all&quot;</span>,</span>
-<span id="cb15-3"><a href="#cb15-3" tabindex="-1"></a>  <span class="at">value_type =</span> <span class="st">&quot;both&quot;</span></span>
-<span id="cb15-4"><a href="#cb15-4" tabindex="-1"></a>)</span></code></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" tabindex="-1"></a>both <span class="ot">&lt;-</span> <span class="fu">get_sidra</span>(</span>
+<span id="cb16-2"><a href="#cb16-2" tabindex="-1"></a>  <span class="at">api =</span> <span class="st">&quot;/t/1849/n3/all/v/811/p/2018/c12762/all&quot;</span>,</span>
+<span id="cb16-3"><a href="#cb16-3" tabindex="-1"></a>  <span class="at">value_type =</span> <span class="st">&quot;both&quot;</span></span>
+<span id="cb16-4"><a href="#cb16-4" tabindex="-1"></a>)</span></code></pre></div>
 </div>
 <div id="network-behavior" class="section level2">
 <h2>Network behavior</h2>
 <p>Requests use HTTPS, UTF-8 decoding, an identifying user agent, a
 timeout, and limited retries for transient failures. Customize the
 timeout and retry count with:</p>
-<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" tabindex="-1"></a><span class="fu">options</span>(</span>
-<span id="cb16-2"><a href="#cb16-2" tabindex="-1"></a>  <span class="at">sidrar.timeout =</span> <span class="dv">120</span>,</span>
-<span id="cb16-3"><a href="#cb16-3" tabindex="-1"></a>  <span class="at">sidrar.retries =</span> <span class="dv">4</span></span>
-<span id="cb16-4"><a href="#cb16-4" tabindex="-1"></a>)</span></code></pre></div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" tabindex="-1"></a><span class="fu">options</span>(</span>
+<span id="cb17-2"><a href="#cb17-2" tabindex="-1"></a>  <span class="at">sidrar.timeout =</span> <span class="dv">120</span>,</span>
+<span id="cb17-3"><a href="#cb17-3" tabindex="-1"></a>  <span class="at">sidrar.retries =</span> <span class="dv">4</span></span>
+<span id="cb17-4"><a href="#cb17-4" tabindex="-1"></a>)</span></code></pre></div>
 <p>Catalog and metadata caching is explicit and disabled by default.
-Value responses are never cached:</p>
-<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" tabindex="-1"></a>metadata <span class="ot">&lt;-</span> <span class="fu">sidra_metadata</span>(<span class="dv">7060</span>, <span class="at">cache =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb17-2"><a href="#cb17-2" tabindex="-1"></a><span class="fu">sidra_cache_info</span>()</span>
-<span id="cb17-3"><a href="#cb17-3" tabindex="-1"></a><span class="fu">sidra_cache_clear</span>()</span></code></pre></div>
+Value responses are not cached automatically; explicit collection
+checkpoints are separate from the metadata cache:</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" tabindex="-1"></a>metadata <span class="ot">&lt;-</span> <span class="fu">sidra_metadata</span>(<span class="dv">7060</span>, <span class="at">cache =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb18-2"><a href="#cb18-2" tabindex="-1"></a><span class="fu">sidra_cache_info</span>()</span>
+<span id="cb18-3"><a href="#cb18-3" tabindex="-1"></a><span class="fu">sidra_cache_clear</span>()</span></code></pre></div>
 <p>Use <code>refresh = TRUE</code> to bypass and replace a cached
 discovery entry.</p>
 <p>Cloudflare browser challenges are identified as
 <code>sidrar_challenge_error</code>. For compatible values queries,
 <code>get_sidra()</code> and <code>sidra_collect()</code> can use IBGE’s
 official aggregate API v3 as an alternative endpoint. This fallback
-supports one geographic level, explicit or latest periods, standard
-variable/category selections, and the default format and precision. It
-preserves the requested headers and special-value handling, and
-announces when the alternative is used. Set
+supports multiple geographic levels, explicit periods and ranges,
+complete or first/latest period selections, standard variable/category
+selections, and the default descriptor format. Dimension columns follow
+the original URL; observation order remains that returned by the
+alternative service. It preserves the requested headers and
+special-value handling, and announces when the alternative is used. Set
 <code>options(sidrar.fallback = FALSE)</code> to disable it. Unsupported
 selections retain the original challenge error with an explanation in
 <code>fallback_reason</code>.</p>
+<p>Explicit decimal precision is accepted only when numeric values
+already have the requested decimal places. Otherwise
+<code>sidrar_fallback_precision_error</code> (also a
+<code>sidrar_parse_error</code>) prevents silent re-rounding or invented
+digits. Default precision preserves the received values; maximum
+precision is not supported by this alternative. Automatic classification
+discovery can use official aggregate metadata when the SIDRA descriptor
+returns a challenge.</p>
+<p>Every fallback response is checked for complete dimension fields,
+textual identifiers, duplicate observation keys, and codes outside
+explicit filters. Missing explicitly requested members generate
+<code>sidrar_incomplete_warning</code>, not fabricated rows or zeros:
+legitimate sparse tables need not form a full Cartesian product. Full
+coverage of <code>all</code> and contextual geographic membership still
+require comparison with current metadata.</p>
+<p>For HTTP 429 or 503, the client honors a valid
+<code>Retry-After</code> header, including HTTP dates. The default
+maximum accepted server delay is 60 seconds; set
+<code>options(sidrar.retry_after_max = 120)</code> to allow up to two
+minutes. The value must be one finite positive number of seconds;
+invalid settings use 60, and
+<code>options(sidrar.retry_after_max = NULL)</code> restores that
+default. If another attempt would exceed this limit,
+<code>sidrar_retry_after_error</code> carries the delay in
+<code>retry_after</code> and the configured limit in
+<code>retry_after_max</code>; it does not trigger an early retry or
+change the per-attempt timeout.</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" tabindex="-1"></a>pnad <span class="ot">&lt;-</span> <span class="fu">get_sidra</span>(</span>
+<span id="cb19-2"><a href="#cb19-2" tabindex="-1"></a>  <span class="at">api =</span> <span class="st">&quot;/t/6468/n1/all/n2/all/n3/all/v/4099/p/all/d/v4099%201&quot;</span>,</span>
+<span id="cb19-3"><a href="#cb19-3" tabindex="-1"></a>  <span class="at">value_type =</span> <span class="st">&quot;both&quot;</span></span>
+<span id="cb19-4"><a href="#cb19-4" tabindex="-1"></a>)</span></code></pre></div>
 <p>Collection provenance records actual source endpoints in
 <code>urls</code> and the original queries in
 <code>requested_urls</code> when fallback occurs. If both official

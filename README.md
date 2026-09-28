@@ -155,34 +155,94 @@ options(
 Regular package tests are offline. Live API smoke tests run separately
 on a small set of queries to detect availability and schema changes.
 
+HTTP 429 and 503 responses honor `Retry-After` in seconds or HTTP-date
+form, even when retry logging is quiet. The maximum accepted
+server-requested delay defaults to 60 seconds and is configurable for
+all package requests:
+
+``` r
+options(sidrar.retry_after_max = 120) # Accept server delays up to two minutes
+options(sidrar.retry_after_max = NULL) # Restore the default of 60 seconds
+```
+
+Use one finite positive number of seconds; invalid settings fall back to
+60. If the server requests more than this limit,
+`sidrar_retry_after_error` carries the original HTTP details,
+`retry_after`, and `retry_after_max`, instead of retrying early. Wait
+until the permitted time before trying again. This option does not
+change `sidrar.timeout` or `sidrar.retries`.
+
 ### Cloudflare access challenges
 
 Some SIDRA values requests have returned a Cloudflare browser challenge
 (`HTTP 403`, `Just a moment...`) since reports dated September 15, 2026.
 This is an access restriction upstream, rather than a malformed query.
 
-Version 0.5.1 recognizes this response and, for compatible queries, uses
+The package recognizes this response and, for compatible queries, uses
 the official IBGE aggregate API v3 with `view=flat`. Existing calls to
 `get_sidra()` and `sidra_collect()` can use this fallback without
-changing their arguments. It supports one geographic level (including a
-containing level filter), explicit periods or `last`, explicit
-variable/category codes or `all`/`allxp` as appropriate, and the default
-format and precision. Header handling and `value_type` remain unchanged.
-A message identifies when the alternative endpoint is used.
+changing their arguments. Version 0.6.0 extends the fallback introduced
+in 0.5.1 to multiple geographic levels (including containing-level
+filters), explicit periods and ranges, `all`, `first`, `first N`,
+`last`, and `last N`. Explicit variable/category codes or `all`/`allxp`
+are supported as appropriate, with the default descriptor format. Header
+handling and `value_type` remain unchanged. A message identifies when
+the alternative endpoint is used.
 
-When `classific = "all"` discovers classifications automatically,
-SIDRA’s descriptor endpoint must also be accessible before values can be
-requested.
+For example, the complete PNAD quarterly series for Brazil, regions, and
+states can be requested without changing the original API path:
 
-Territorial views, extinct-unit options, multiple geographic levels,
-`first` or `all` periods, ranges, category sums, custom
-format/precision, and other unsupported URL options are not translated
-automatically. The original `sidrar_challenge_error` then explains the
-limitation in `fallback_reason`. For URLs supplied through `api`,
-dimensions must follow the standard geography, period, variable,
-classification order used by `sidra_query()`, with period and variable
-specified explicitly. You can disable fallback with
-`options(sidrar.fallback = FALSE)`.
+``` r
+pnad <- get_sidra(
+  api = "/t/6468/n1/all/n2/all/n3/all/v/4099/p/all/d/v4099%201",
+  value_type = "both"
+)
+```
+
+Dimension columns follow the order in the original URL, including
+variable before period. Observation order remains that returned by the
+alternative service; sort explicitly when an analysis depends on row
+order. When automatic classification discovery (`classific = "all"`)
+encounters a descriptor challenge, it can also use official aggregate
+metadata.
+
+`info_sidra()` now uses aggregate metadata and the period inventory
+after a descriptor challenge as well. Its five legacy components are
+unchanged. Unavailable descriptor-specific geographic names, active-unit
+counts, and variable availability exceptions are explicitly disclosed
+rather than guessed. Inspect `attr(info_sidra(7060), "sidrar_metadata")`
+for the alternative source URLs and limitations. `wb = TRUE` still opens
+the original descriptor page.
+
+Explicit precision (`/d/1` or a single variable-specific `/d/v4099 1`,
+with the space URL-encoded) is accepted only when returned numeric
+values already have the requested decimal places. Otherwise a
+`sidrar_fallback_precision_error` is raised; the alternative service
+does not expose all stored digits. Values are neither rounded again nor
+padded to imply unavailable precision. Default precision preserves the
+received values.
+
+Territorial views, extinct-unit options, category sums, non-default
+descriptor formats, maximum precision (`digits = "max"`), and other
+unsupported URL options are not translated automatically. The original
+`sidrar_challenge_error` then explains the limitation in
+`fallback_reason`. For URLs supplied through `api`, period, variable,
+and at least one territorial level must be specified explicitly. You can
+disable fallback with `options(sidrar.fallback = FALSE)`.
+
+The alternative response is always checked for complete dimension
+fields, textual identifiers, duplicate observation keys, and codes
+outside explicit filters. Unexpected codes or duplicate keys are errors;
+rows are never silently filtered or deduplicated. Missing explicitly
+requested members instead emit `sidrar_incomplete_warning`, with details
+in its `missing` field. This may mean unavailable data rather than
+truncation: sparse tables need not contain every possible combination,
+and missing cells are not filled with zero.
+
+These local checks do not establish full coverage of `all`, exact
+membership of `first`/`last`, or containing-level geography filters.
+Those comparisons require current catalog or territorial metadata. The
+checks add no metadata requests of their own.
 
 If both official endpoints are unavailable, the package cannot restore
 access itself. Report the failing URL, access time, and `cf_ray` from
@@ -202,10 +262,11 @@ minimum number of calls. The condition also inherits from
 `sidra_split()` partitions one explicit dimension without splitting
 category sums or changing the geographic level. A geographic filter is
 splittable only when the query requests one non-Brazil level; otherwise
-unchanged territorial levels could overlap between calls. Relative
-periods, ranges, and embedded comma lists must first be expanded into
-one explicit code per vector element. `sidra_collect()` runs the
-resulting queries sequentially and refuses to combine incompatible
+unchanged territorial levels could overlap between calls. Period
+selectors `all`, `first`, `last`, and ranges are expanded using the
+official period inventory; gaps are not filled with invented periods.
+Relative or complete API URLs can also be split. `sidra_collect()` runs
+the resulting queries sequentially and refuses to combine incompatible
 schemas:
 
 ``` r
@@ -223,8 +284,53 @@ data <- sidra_collect(batches, provenance = TRUE)
 sidra_provenance(data)
 ```
 
-The appropriate group size depends on the cardinality of every selected
-dimension. Automatic implicit splitting remains disabled.
+### URL batching and resumable collection (0.6.0)
+
+For automatic period batching, supply `batch_size` to `sidra_collect()`.
+Optionally keep successful batches in a dedicated checkpoint directory:
+
+``` r
+url <- "/t/6468/n1/all/n2/all/n3/all/v/4099/p/all/h/n"
+
+pnad <- sidra_collect(
+  url,
+  value_type = "both",
+  batch_size = 8,             # At most eight periods per request
+  checkpoint = "sidrar-pnad",
+  provenance = TRUE
+)
+
+# If interrupted, run the same call again: verified completed batches are reused.
+sidra_provenance(pnad)$batch_accessed_at
+sidra_provenance(pnad)$resumed
+
+# Or inspect a split before downloading any values:
+batches <- sidra_split(url, by = "period", size = 8)
+batches$resolution$selection
+```
+
+The appropriate group size depends on every selected dimension; even one
+period can exceed the service’s value limit. In that case, split another
+explicit dimension (variable, category, or a safe geographic filter) as
+well. `get_sidra()` remains a single-request interface. Neither batching
+nor saving values to disk is enabled implicitly in ordinary calls.
+
+Checkpointed queries freeze relative periods even without `batch_size`.
+Resuming validates query settings, package version, checksums, and batch
+schemas. It does not refresh old results: use a new directory for a new
+snapshot, particularly when upstream data may have been revised.
+Provenance keeps each batch’s original download time. Checkpoints are
+trusted local RDS files. Warnings are saved and signaled again on
+resume, including incomplete-coverage diagnostics. Checkpoints remain
+separate from the metadata cache; `sidra_cache_clear()` does not remove
+them. The final result is still combined in memory.
+
+Concurrent use of a checkpoint is rejected. After a hard process
+interruption, confirm no collector is running before manually removing a
+leftover `.sidrar-lock` directory. Existing or corrupt checkpoints are
+never silently deleted. URL splitting rejects ambiguous/unsupported
+selectors; geographic containment splitting remains available through
+structured queries only.
 
 ### Geographic identifiers
 

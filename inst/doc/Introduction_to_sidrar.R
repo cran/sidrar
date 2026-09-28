@@ -77,6 +77,19 @@ knitr::opts_chunk$set(echo = TRUE, collapse = TRUE, comment = "#>")
 # sidra_provenance(data)
 
 ## ----eval = FALSE-------------------------------------------------------------
+# url <- "/t/6468/n1/all/n2/all/n3/all/v/4099/p/all/h/n"
+# batches <- sidra_split(url, "period", size = 8)
+# batches$resolution$selection
+# 
+# data <- sidra_collect(
+#   url, batch_size = 8, value_type = "both",
+#   checkpoint = "sidrar-pnad", provenance = TRUE
+# )
+# # Repeat the same call after an interruption to reuse completed batches.
+# sidra_provenance(data)$batch_accessed_at
+# sidra_provenance(data)$resumed
+
+## ----eval = FALSE-------------------------------------------------------------
 # sidra_query(1612, geo_view = 44, classific = character())
 # sidra_query(
 #   1612,
@@ -121,4 +134,10 @@ knitr::opts_chunk$set(echo = TRUE, collapse = TRUE, comment = "#>")
 # metadata <- sidra_metadata(7060, cache = TRUE)
 # sidra_cache_info()
 # sidra_cache_clear()
+
+## ----eval = FALSE-------------------------------------------------------------
+# pnad <- get_sidra(
+#   api = "/t/6468/n1/all/n2/all/n3/all/v/4099/p/all/d/v4099%201",
+#   value_type = "both"
+# )
 
